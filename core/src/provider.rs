@@ -36,7 +36,7 @@ use tokio::sync::Mutex;
 use tracing::{error, info};
 use url::Url;
 
-use crate::{event::RindexerEventFilter, manifest::core::Manifest};
+use crate::{event::RindexerEventFilter, manifest::core::Manifest, retry_policy::ErpcRetryPolicy};
 
 /// An alias type for a complex alloy Provider
 pub type RindexerProvider = FillProvider<
@@ -314,7 +314,12 @@ pub async fn create_client(
 
     let client_with_auth = Client::builder().default_headers(custom_headers).build()?;
     let http = Http::with_client(client_with_auth, rpc_url);
-    let retry_layer = RetryBackoffLayer::new(5000, 500, compute_units_per_second.unwrap_or(660));
+    let retry_layer = RetryBackoffLayer::new_with_policy(
+        5000,
+        500,
+        compute_units_per_second.unwrap_or(660),
+        ErpcRetryPolicy::default(),
+    );
     let rpc_client = RpcClient::builder().layer(retry_layer).transport(http, false);
     let provider = ProviderBuilder::new().connect_client(rpc_client);
 

@@ -6,6 +6,8 @@ pub mod manifest;
 mod system_state;
 pub use system_state::{initiate_shutdown, is_running};
 
+mod retry_policy;
+
 mod database;
 pub use database::postgres::{
     client::{PostgresClient, ToSql},
